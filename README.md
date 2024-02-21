@@ -1,6 +1,6 @@
 # defectReport
 
-A new Flutter project.
+UI for automating book entry task for automotive decorative parts manufacturer 
 
 ## Getting Started
 
