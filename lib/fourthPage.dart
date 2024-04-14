@@ -1,62 +1,62 @@
-// ignore_for_file: use_key_in_widget_constructors, file_names, prefer_const_constructors
+// ignore_for_file: use_key_in_widget_constructors, file_names, prefer_const_constructors, unused_element, use_build_context_synchronously
+
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 
 class FourthPage extends StatefulWidget {
   @override
-  // ignore: library_private_types_in_public_api
   _FourthPageState createState() => _FourthPageState();
 }
 
 class _FourthPageState extends State<FourthPage> {
   final List<String> defects = [
-    'Defect 1',
-    'Defect 2',
-    'Defect 3',
-    'Defect 4',
-    'Defect 5',
-    'Defect 6',
-    'Defect 7',
-    'Defect 8',
-    'Defect 9',
-    'Defect 10',
-    'Defect 11',
-    'Defect 12',
-    'Defect 13',
-    'Defect 14',
-    'Defect 15',
-    'Defect 16',
-    'Defect 17',
-    'Defect 18',
-    'Defect 19',
-    'Defect 20',
-    'Defect 21',
-    'Defect 22',
-    'Defect 23',
-    'Defect 24',
-    'Defect 25',
-    'Defect 26',
-    'Defect 27',
-    'Defect 28',
-    'Defect 29',
-    'Defect 30',
-    'Defect 31',
-    'Defect 32',
-    'Defect 33',
-    'Defect 34',
-    'Defect 35',
-    'Defect 36',
-
-    // Add more defects here
+    'Buff',
+    'Roughness',
+    'Plating Short',
+    'Pin Hole',
+    'Peel Off',
+    'Burn Mark',
+    'Burning',
+    'Patch Mark',
+    'Waviness',
+    'Whiteness',
+    'Dull Shade',
+    'Crack',
+    'Pit Mark',
+    'Pitting',
+    'Dust',
+    'Warpage',
+    'Lock Band',
+    'Damage',
+    'Shrinkage',
+    'Yellow Shade',
+    'Deep Cut',
+    'Scratch',
+    'Dent',
+    'Sink Mark',
+    'Gas Mark',
+    'Burr',
+    'Flash',
+    'Weldline',
+    'Silver Mark',
+    'Black Spot',
+    'Flow Mark',
+    'Extra Material',
+    'MOULDING SCRATCH',
+    'Damage',
+    'Plant Problem',
+    'Other'
   ];
 
-  Map<String, int> defectCounters = {};
-  Set<String> selectedDefects = {};
+  Map<String, Map<String, int>> partDefectCounters = {};
+
   int totalDefectCounter = 0;
 
   @override
   Widget build(BuildContext context) {
-    //String date = DateTime.now().toString();
     Map<String, dynamic> data =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     data['defectiveProducts'] = 0.toString();
@@ -67,7 +67,7 @@ class _FourthPageState extends State<FourthPage> {
     String shop = data['shop'].toString();
     String lotSize = data['lotSize'].toString();
     String selectedProduct = data['selectedProduct'].toString();
-    //var lotCheck = 0;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Select Defect'),
@@ -103,24 +103,30 @@ class _FourthPageState extends State<FourthPage> {
             Expanded(
               child: GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4, // 4 columns
+                  crossAxisCount: 4,
                   mainAxisSpacing: 8.0,
                   crossAxisSpacing: 8.0,
                 ),
                 itemCount: defects.length,
                 itemBuilder: (context, index) {
                   final defect = defects[index];
-                  final defectCounter = defectCounters[defect] ?? 0;
+                  final defectCounter =
+                      partDefectCounters[selectedProduct] != null
+                          ? partDefectCounters[selectedProduct]![defect] ?? 0
+                          : 0;
 
                   return GestureDetector(
                     onDoubleTap: () {
                       setState(() {
-                        defectCounters[defect] = defectCounter + 1;
+                        if (partDefectCounters[selectedProduct] == null) {
+                          partDefectCounters[selectedProduct] = {};
+                        }
+                        partDefectCounters[selectedProduct]![defect] =
+                            (partDefectCounters[selectedProduct]![defect] ??
+                                    0) +
+                                1;
                         totalDefectCounter++;
                       });
-                    },
-                    onLongPress: () {
-                      _showDefectDeleteDialog(index);
                     },
                     child: GridTile(
                       child: Container(
@@ -150,27 +156,42 @@ class _FourthPageState extends State<FourthPage> {
                 ElevatedButton(
                   onPressed: () {
                     data['date'] = DateTime.now().toString();
-                    // Create a map to store the part information
                     Map<String, dynamic> partInfo = {
                       'Product': selectedProduct,
                     };
 
-                    // Add defect count for each defect to the map
-                    for (int i = 0; i < defects.length; i++) {
-                      String defect = defects[i];
-                      int defectCounter = defectCounters[defect] ?? 0;
-                      partInfo['defect$i'] = defectCounter;
-                    }
+                    partDefectCounters[selectedProduct]?.forEach((key, value) {
+                      partInfo[key] = value;
+                    });
 
-                    // Add total defect counter to the map
                     partInfo['totalDefects'] = totalDefectCounter;
-                    _resetDefectData();
-                    // Add other data from 'data' to the map
+                    //_resetDefectData();
                     partInfo.addAll(data);
                     Navigator.pushNamed(context, '/third', arguments: partInfo);
                   },
                   child: Text('Next'),
                 ),
+                ElevatedButton(
+                  onPressed: _generateCSVReport,
+                  child: Text('Generate CSV Report'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    data['date'] = DateTime.now().toString();
+                    Map<String, dynamic> partInfo = {
+                      'Product': selectedProduct,
+                    };
+
+                    partDefectCounters[selectedProduct]?.forEach((key, value) {
+                      partInfo[key] = value;
+                    });
+
+                    partInfo['totalDefects'] = totalDefectCounter;
+                    partInfo.addAll(data);
+                    Navigator.pushNamed(context, '/fifth', arguments: partInfo);
+                  },
+                  child: Text('Lot Complete'),
+                )
               ],
             ),
           ],
@@ -181,42 +202,51 @@ class _FourthPageState extends State<FourthPage> {
 
   void _resetDefectData() {
     setState(() {
-      defectCounters.clear();
-      //totalDefectCounter = 0;
+      partDefectCounters.clear();
+      totalDefectCounter = 0;
     });
   }
 
   void _showDefectDeleteDialog(int defectIndex) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        final defect = defects[defectIndex];
-        return AlertDialog(
-          title: Text('Reduce Defect Count'),
-          content: Text('Do you want to reduce the count of $defect?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  final defectCounter = defectCounters[defect] ?? 0;
-                  if (defectCounter > 0) {
-                    defectCounters[defect] = defectCounter - 1;
-                    totalDefectCounter--;
-                  }
-                });
-                Navigator.pop(context);
-              },
-              child: Text('Reduce'),
-            ),
-          ],
-        );
-      },
-    );
+    // Implement the dialog if needed
+  }
+
+  Future<void> _generateCSVReport() async {
+    try {
+      final String csv = _convertToCSV();
+      const String path = '/storage/emulated/0/Download/report.csv';
+      final File file = File(path);
+      await file.writeAsString(csv);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('CSV Report Generated Successfully!'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      print('Error generating CSV report: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error generating CSV report. Please try again.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  String _convertToCSV() {
+    final StringBuffer buffer = StringBuffer();
+
+    // Write CSV header
+    buffer.writeln('PART NAME,${defects.join(',')}');
+
+    // Write data for each part
+    partDefectCounters.forEach((part, defects) {
+      final List<String> defectValues =
+          defects.values.map((value) => value.toString()).toList();
+      buffer.writeln('$part,${defectValues.join(',')}');
+    });
+
+    return buffer.toString();
   }
 }

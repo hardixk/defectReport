@@ -60,6 +60,7 @@ class _FifthPageState extends State<FifthPage> {
                 SizedBox(width: 8.0),
                 //Text('[$defectiveProducts]'),
                 SizedBox(width: 8.0),
+
                 ElevatedButton(
                   onPressed: () {
                     if (defectiveProducts > 0) {
@@ -87,9 +88,9 @@ class _FifthPageState extends State<FifthPage> {
                   data['defectCounters'] =
                       defectCounter; // Pass the updated defectCounters map
                   data['totalDefectCounter'] = totalDefectCounter;
-                  Navigator.pushNamed(context, '/fourth', arguments: data);
+                  Navigator.pushNamed(context, '/', arguments: data);
                 },
-                child: Text('New'))
+                child: Text('Exit'))
           ],
         ),
       ),
